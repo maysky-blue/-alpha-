@@ -10,10 +10,10 @@
 					<block v-for="(image,index) in imageList" :key="index">
 						
 						<view class="uni-uploader__file position-relative">
-							<image class="uni-uploader__img rounded" :src="image" :data-src="image" @tap="previewImage" mode="aspectFill"></image>
-							<view class="position-absolute top-0 right-0 px-1 rounded" 
-							style="background-color: rgba(0,0,0,0.5);" @click.stop="deleteImage(index)">
-								<text class="iconfont icon-shanchu text-white"></text><!-- 图标库改变可能要变 -->
+							<image class="uni-uploader__img rounded" :src="image.url" :data-src="image.url" @tap="previewImage" mode="aspectFill"></image>
+							
+							<view class="position-absolute top-0 right-0 rounded" style="padding: 0 15rpx;background-color: rgba(0,0,0,0.5);" @click.stop="deleteImage(index)">
+								<text class="iconfont icon-shanchu text-white"></text>
 							</view>
 						</view>
 						
@@ -39,7 +39,7 @@
 		['compressed', 'original']
 	]
 	export default {
-		props:{
+		props: {
 			list:Array,
 			show:{
 				type:Boolean,
@@ -58,35 +58,33 @@
 				count: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 			}
 		},
-		onReady(){
-			/* console.log(this.list);无数据，事件未被触发，奇怪 */
-			this.imageList =this.list
+		created() {
+			this.imageList = this.list
 		},
-		onUnload() {
+		destroyed() {
 			this.imageList = [],
-			this.sourceTypeIndex = 2,
-			this.sourceType = ['拍照', '相册', '拍照或相册'],
-			this.sizeTypeIndex = 2,
-			this.sizeType = ['压缩', '原图', '压缩或原图'],
-			this.countIndex = 8;
+				this.sourceTypeIndex = 2,
+				this.sourceType = ['拍照', '相册', '拍照或相册'],
+				this.sizeTypeIndex = 2,
+				this.sizeType = ['压缩', '原图', '压缩或原图'],
+				this.countIndex = 8;
 		},
 		methods: {
-			//删除图片
+			// 删除图片
 			deleteImage(index){
 				uni.showModal({
-					title:'提示',
-					content:'是否要删除该图片？',
-					showCancel:true,
-					cancelText:'不删除',
-					confirmText:'删除',
-					success:res=>{
-						if(res.confirm){
+					title: '提示',
+					content: '是否要删除该图片？',
+					showCancel: true,
+					cancelText: '不删除',
+					confirmText: '删除',
+					success: res => {
+						if (res.confirm) {
 							this.imageList.splice(index,1)
 							this.$emit('change',this.imageList)
 						}
-					}
-				})
-				
+					},
+				});
 			},
 			chooseImage: async function() {
 				// #ifdef APP-PLUS
@@ -111,8 +109,17 @@
 					sizeType: sizeType[this.sizeTypeIndex],
 					count: this.imageList.length + this.count[this.countIndex] > 9 ? 9 - this.imageList.length : this.count[this.countIndex],
 					success: (res) => {
-						this.imageList = this.imageList.concat(res.tempFilePaths);
-						this.$emit('change',this.imageList)
+						// 上传图片
+						res.tempFilePaths.forEach(item=>{
+							this.$H.upload('/image/uploadmore',{
+								filePath: item,
+								name: 'imglist[]',
+								token:true
+							}).then(result=>{
+								this.imageList.push(result.data.list[0])
+								this.$emit('change',this.imageList)
+							})
+						})
 					},
 					fail: (err) => {
 						// #ifdef APP-PLUS
@@ -207,10 +214,10 @@
 
 <style>
 	.cell-pd {
-		padding: 22rpx 30rpx;
+		padding: 22upx 30upx;
 	}
 
 	.list-pd {
-		margin-top: 50rpx;
+		margin-top: 50upx;
 	}
 </style>
